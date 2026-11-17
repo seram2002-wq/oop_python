@@ -17,24 +17,13 @@ class Company:
         return total
 
     def print_report(self):
-        print("=" * 70)
-        print("부서", "인원", "급여 총액", "평균 경력", sep="\t")
+        print(f"===== {self.name} 사원 현황 =====")
         for department in self.departments:
-            print(
-                department.name,
-                f"{len(department.employees)}명",
-                f"{department.get_payroll():.0f}",
-                f"{department.get_avg_career():.1f}년",
-                sep="\t",
-            )
-        print("-" * 70)
+            department.print_members()
         print(
-            f"{self.name} 전체",
-            f"{self.get_employee_count()}명",
-            f"{self.get_payroll():.0f}",
-            sep="\t",
+            f"전체 사원 {self.get_employee_count()}명 | "
+            f"전체 급여 총액 {self.get_payroll()}"
         )
-        print("=" * 70)
 
 class Department:
     def __init__(self, name):
@@ -42,6 +31,7 @@ class Department:
         self.employees = []
 
     def add_employee(self, employee):
+        employee.dept = self.name
         self.employees.append(employee)
 
     def get_payroll(self):
@@ -53,15 +43,14 @@ class Department:
         return sum(employee.get_career() for employee in self.employees) / len(self.employees)
 
     def print_members(self):
-        print(f"[{self.name}]")
-        print("이름", "경력", "급여 총액", sep="\t")
+        print(
+            f"[{self.name}] {len(self.employees)}명 | "
+            f"급여 총액 {self.get_payroll()} | "
+            f"평균 경력 {self.get_avg_career():.1f}년"
+        )
+        print("  이름\t경력\t총액\t세금\t실수령액")
         for employee in self.employees:
-            print(
-                employee.name,
-                f"{employee.get_career()}년",
-                f"{employee.salary.get_total():.0f}",
-                sep="\t",
-            )
+            print(f"  {employee.to_string()}")
 
 
 #급여 계산만 담당
@@ -103,21 +92,23 @@ class WorkHistory:
 
 # 사원정보 + Salary 객체를 속성으로 가진다. (has-a)
 class Employee:
-    def __init__(self,name,dept,salary):
+    def __init__(self, name, salary):
         self.name = name
-        self.dept = dept
-        self.salary = salary     #1:1 Saraly
-        self.histories = []     #WorkHistory 객체를 담을 리스트
+        self.dept = ""
+        self.salary = salary
+        self.histories = []
 
     def add_history(self,history):
         self.histories.append(history)
 
     def to_string(self):
-        return "{}\t{}\t{}\t{}\t{}\t{}".format(self.name,
-                         self.dept,self.get_career(),
-                         self.salary.get_total(),
-                         self.salary.get_tax(),
-                         self.salary.get_net()   )
+        return "{}\t{}년\t{}\t{}\t{}".format(
+            self.name,
+            self.get_career(),
+            self.salary.get_total(),
+            self.salary.get_tax(),
+            self.salary.get_net(),
+        )
     def get_career(self):
         total = 0
         for h in self.histories:
@@ -135,22 +126,23 @@ if __name__ == "__main__":
         company.add_department(department)
 
     employees = [
-        Employee("김민수", "개발팀", Salary(300, 50, 20)),
-        Employee("이지은", "인사팀", Salary(320, 40, 30)),
-        Employee("박준호", "영업팀", Salary(280, 60, 10)),
-        Employee("최서연", "개발팀", Salary(350, 30, 25)),
-        Employee("한도윤", "마케팅팀", Salary(300, 70, 15)),
+        Employee("김민수", Salary(300, 50, 20)),
+        Employee("최서연", Salary(350, 30, 25)),
+        Employee("이지은", Salary(320, 40, 30)),
+        Employee("박준호", Salary(280, 60, 10)),
+        Employee("한도윤", Salary(300, 70, 15)),
     ]
-    for employee in employees:
-        departments[employee.dept].add_employee(employee)
+    employee_departments = ("개발팀", "개발팀", "인사팀", "영업팀", "마케팅팀")
+    for employee, department_name in zip(employees, employee_departments):
+        departments[department_name].add_employee(employee)
 
-    employees[0].add_history(WorkHistory("넥슨", "사원", 2015, 2018))
-    employees[0].add_history(WorkHistory("네오위즈", "대리", 2018, 2022))
-    employees[1].add_history(WorkHistory("블루웨이브", "사원", 2018, 2022))
-    employees[3].add_history(WorkHistory("데이터랩", "사원", 2012, 2016))
-    employees[3].add_history(WorkHistory("클라우드원", "과장", 2016, 2020))
-    employees[3].add_history(WorkHistory("넥스트AI", "차장", 2020, 2023))
-    employees[4].add_history(WorkHistory("스타트업", "사원", 2021, 2024))
+    employees[0].add_history(WorkHistory("네오소프트", "사원", 2015, 2018))
+    employees[0].add_history(WorkHistory("한빛시스템", "대리", 2018, 2022))
+    employees[1].add_history(WorkHistory("데이터랩", "연구원", 2012, 2016))
+    employees[1].add_history(WorkHistory("클라우드원", "선임", 2016, 2020))
+    employees[1].add_history(WorkHistory("넥스트AI", "책임", 2020, 2023))
+    employees[2].add_history(WorkHistory("그린HR", "사원", 2017, 2021))
+    employees[4].add_history(WorkHistory("브랜드웍스", "사원", 2019, 2022))
 
     company.print_report()
 
